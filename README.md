@@ -3,3 +3,5 @@
 1.  MediaPipe library
 2.  Tensorflow
 3.  Python
+
+Trained using LSTM model
