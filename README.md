@@ -1,5 +1,5 @@
 ### **Kenyan Sign Language Recognition System**
 #### Technologies Used
-MediaPipe library
-Tensorflow
-Python
+1.  MediaPipe library
+2.  Tensorflow
+3.  Python
