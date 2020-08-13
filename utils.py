@@ -7,19 +7,20 @@ import os
 from tqdm import tqdm
 from sklearn.preprocessing import LabelBinarizer
 import math
+import ffmpeg
 
 
-def calculateDistance(x2, y2):
-    dist = math.sqrt((x2 - 0) ** 2 + (y2 - 0) ** 2)
+def calculateDistance(x2, y2, x1, y1):
+    dist = math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2)
     return dist
 
 
 # paths
-CSV_PATH = 'csv_outputs/'
-TEST_DATA_PATH = 'test_data/'
-TEST_DATA_ANNOTATED_PATH = 'test_data_annotated/'
+CSV_PATH = 'csv_outputs_pitch_1/'
+TEST_DATA_PATH = 'test_data_pitch_1/'
+TEST_DATA_ANNOTATED_PATH = 'test_data_annotated_pitch_1/'
 
-SEQ_LENGTH = 48
+SEQ_LENGTH = 50
 
 
 def get_sequence_length():
@@ -28,7 +29,7 @@ def get_sequence_length():
 
 def generate_labels():
     LABELS = []
-    with open('labels.txt', 'r') as file:
+    with open('labels_pitch_1.txt', 'r') as file:
         for line in file:
             LABELS.append(line.split('\n')[0])
 
@@ -70,7 +71,6 @@ def execute_mediapipe_csv():
         output_csv_path = os.path.join(abspath, output_csv_path)
 
         cmd = [
-
             path_to_mediapipe_binary,
             "--calculator_graph_config_file=%s" % graph,
             "--input_side_packets=input_video_path=%s,output_video_path=%s" % (input_video_path, output_video_path),
@@ -79,18 +79,19 @@ def execute_mediapipe_csv():
         ]
         subprocess.run(cmd, capture_output=True, cwd="mediapipe")
 
-def convert_to_csv(video):
 
+def convert_to_csv(video):
     path_to_mediapipe_binary = "bazel-bin/mediapipe/examples/desktop/multi_hand_tracking/multi_hand_tracking_tflite"
     graph = "mediapipe/graphs/hand_tracking/multi_hand_tracking_desktop.pbtxt"
 
     abspath = os.path.dirname(os.path.abspath(__file__))
-    input_video_path = os.path.join(abspath, video)
-    path_for_annotation = TEST_DATA_ANNOTATED_PATH + 'test_videos'
-    path_for_csv = CSV_PATH + 'test_videos'
-
     video_save_dir = video.split('/')[-1].split('.')[0]
-    output_video_path = path_for_annotation + '/' + video_save_dir + '.mp4'
+    ffmpeg.input(video).filter('fps', fps=60, round='up').output(video + '_compressed_v2.mp4').run()
+    input_video_path = os.path.join(abspath, video+ '_compressed_v2.mp4')
+    path_for_annotation = 'test_videos'
+    path_for_csv = 'test_videos'
+
+    output_video_path = path_for_annotation + '/' + video_save_dir + '_annotated.mp4'
     output_video_path = os.path.join(abspath, output_video_path)
     output_csv_path = path_for_csv + '/' + video_save_dir + '.csv'
     output_csv_path = os.path.join(abspath, output_csv_path)
@@ -113,6 +114,7 @@ def convert_to_csv(video):
     extracted_landmarks_col = np.array(extracted_landmarks_col)
     return extracted_landmarks_col
 
+
 def add_padding(sequence):
     sequence_length = sequence.shape[0]
 
@@ -130,12 +132,22 @@ def add_padding(sequence):
 def extract_landmarks(landmarks_string):
     landmarks_list = landmarks_string.split(" ")
     final_landmarks = []
-    for landmark in landmarks_list:
+    origin = landmarks_list[0][landmarks_list[0].find("(") + 1:landmarks_list[0].find(")")]
+    origin = origin.split(",")
+
+    for index, landmark in enumerate(landmarks_list, start=0):
         if landmark in ['', 'NaN']:
             continue
+
+        if len(final_landmarks) is 21:
+            origin = landmarks_list[21][landmarks_list[21].find("(") + 1:landmarks_list[21].find(")")]
+            origin = origin.split(",")
+
         landmark = landmark[landmark.find("(") + 1:landmark.find(")")]
-        landmarkXY = landmark.split(",")
-        distance_from_origin = calculateDistance(float(landmarkXY[0]), float(landmarkXY[1]))
+        landmarkXYZ = landmark.split(",")
+
+        distance_from_origin = calculateDistance(float(landmarkXYZ[0]), float(landmarkXYZ[1]),
+                                                 float(origin[0]), float(origin[1]))
         final_landmarks.append(distance_from_origin)
 
     while len(final_landmarks) < 42:
@@ -164,4 +176,5 @@ def create_dataset():
         dataset.append(extracted_landmarks_col)
 
     return np.array(dataset), np.array(labels)
+
 
