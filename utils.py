@@ -16,9 +16,9 @@ def calculateDistance(x2, y2, x1, y1):
 
 
 # paths
-CSV_PATH = 'csv_outputs_pitch_1/'
-TEST_DATA_PATH = 'test_data_pitch_1/'
-TEST_DATA_ANNOTATED_PATH = 'test_data_annotated_pitch_1/'
+CSV_PATH = 'csv_outputs/'
+TEST_DATA_PATH = 'test_data/'
+TEST_DATA_ANNOTATED_PATH = 'test_data_annotated/'
 
 SEQ_LENGTH = 50
 
@@ -29,7 +29,7 @@ def get_sequence_length():
 
 def generate_labels():
     LABELS = []
-    with open('labels_pitch_1.txt', 'r') as file:
+    with open('labels.txt', 'r') as file:
         for line in file:
             LABELS.append(line.split('\n')[0])
 
@@ -43,7 +43,7 @@ def execute_mediapipe_csv():
     path_to_mediapipe_binary = "bazel-bin/mediapipe/examples/desktop/multi_hand_tracking/multi_hand_tracking_tflite"
     graph = "mediapipe/graphs/hand_tracking/multi_hand_tracking_desktop.pbtxt"
 
-    training_videos = glob.glob(TEST_DATA_PATH + '*/*.mov')
+    training_videos = glob.glob(TEST_DATA_PATH + '*/*.*')
     annotated_videos = glob.glob(TEST_DATA_ANNOTATED_PATH + '*/*.mp4')
     annotated_videos = [item.replace(TEST_DATA_ANNOTATED_PATH, '').replace('mp4', '') for item in annotated_videos]
     training_videos = [item for item in training_videos if
@@ -51,7 +51,7 @@ def execute_mediapipe_csv():
     for video in tqdm(training_videos, desc='Converting mediapipe files to csv'):
         ANNOTATED_ENTRIES = [entry.name for entry in os.scandir(TEST_DATA_ANNOTATED_PATH) if entry.is_dir()]
         CSV_ENTRIES = [entry.name for entry in os.scandir(CSV_PATH) if entry.is_dir()]
-        abspath = '/Users/bachillah/Documents/Python/KSL/'
+        abspath = os.path.dirname(os.path.abspath(__file__))
         input_video_path = os.path.join(abspath, video)
 
         label = video.split('/')[-2]
