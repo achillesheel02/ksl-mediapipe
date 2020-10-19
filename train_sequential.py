@@ -79,10 +79,10 @@ if __name__ == '__main__':
                   metrics=['accuracy'])
 
     X_train, X_test, y_train, y_test = load_data()
-    lowest_loss = tf.keras.callbacks.ModelCheckpoint(filepath='model_low_loss_pitch_2.h5', mode='min', monitor='val_loss',
+    lowest_loss = tf.keras.callbacks.ModelCheckpoint(filepath='models/model_low_loss.h5', mode='min', monitor='val_loss',
                                                      verbose=1,
                                                      save_best_only=True)
-    highest_acccuracy = tf.keras.callbacks.ModelCheckpoint(filepath='model_high_acc_pitch_2.h5', mode='max',
+    highest_acccuracy = tf.keras.callbacks.ModelCheckpoint(filepath='models/model_high_acc.h5', mode='max',
                                                            monitor='val_accuracy',
                                                            verbose=2,
                                                            save_best_only=True)
@@ -119,5 +119,5 @@ if __name__ == '__main__':
     print('Test loss:', score[0])
     print('Test accuracy:', score[1])
 
-    model.save('model_2_pitch_1.h5')
+    model.save('models/model.h5')
     print("Saved model to disk")
