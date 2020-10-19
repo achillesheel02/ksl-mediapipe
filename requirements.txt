@@ -1,0 +1,10 @@
+Keras
+matplotlib
+numpy
+pandas
+scikit-learn
+scipy
+tensorflow
+opencv-python
+ffmpeg-python
+tqdm
